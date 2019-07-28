@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>Timon&#39;s Blog</title>
+  
+  
+  <link href="/atom.xml" rel="self"/>
+  
+  <link href="https://timonpeng.com/"/>
+  <updated>2019-07-28T11:07:23.993Z</updated>
+  <id>https://timonpeng.com/</id>
+  
+  <author>
+    <name>Timon Peng</name>
+    
+  </author>
+  
+  <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>Reverse engineering GL iNet MiFi router</title>
+    <link href="https://timonpeng.com/reverse-engineering-gl-inet-mifi-router/"/>
+    <id>https://timonpeng.com/reverse-engineering-gl-inet-mifi-router/</id>
+    <published>2019-07-25T07:00:00.000Z</published>
+    <updated>2019-07-28T11:07:23.993Z</updated>
+    
+    <content type="html"><![CDATA[<p>A few days ago, my friend from Beijing sent me a <a href="https://www.gl-inet.com/products/gl-mifi/" target="_blank" rel="noopener">GL-MiFi 4G router</a>. It uses custom developed firmware(based on OpenWrt, of course) to implement some functions. So we want to view its code and how it implements some functions.</p><a id="more"></a><h1 id="Scan-ports"><a href="#Scan-ports" class="headerlink" title="Scan ports"></a>Scan ports</h1><p>I used nmap to scan its ports and found that 53, 80 and some custom service ports(I confirmed that they are some http services) were opened.</p><h1 id="Web-interface"><a href="#Web-interface" class="headerlink" title="Web interface"></a>Web interface</h1><p>SSH and telnet have not been opened, so I decided to check the web interface.</p><p>However, only some basic state and networking setting operation pages here.</p><h1 id="Sniffing-upgrade-host-url"><a href="#Sniffing-upgrade-host-url" class="headerlink" title="Sniffing upgrade host url"></a>Sniffing upgrade host url</h1><p>At that time, the online upgrade function caught my attention. So I decided to sniffing the upgrade url to get the firmware file.</p><p>I connected GL-MiFi to another RT-AC86U router: <code>Internet &lt;-&gt; RT-AC86U &lt;-&gt; GL-MiFi</code> and run <code>tcpdump</code> on RT-AC86U, then use Wireshark, I got the upgrade host ip.</p><p>Then I forwarded all the original traffic to my ip on RT-AC86U.</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">iptables -A PREROUTING -p tcp -m tcp -j DNAT -d ORIGINAL-IP --match multiport --dports 80,443 --to-destination MY-IP nat</span><br></pre></td></tr></table></figure><p>I can see the request urls now. So I wrote a small Flask app to handle all url and response fake data of upgrade request.</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">version=10.0</span><br><span class="line">date=2019-7-25</span><br><span class="line">filename=upgrade_10.0.bin</span><br><span class="line">md5=xxxxxx</span><br></pre></td></tr></table></figure><p>Now I have the url path of the firmware files and downloaded them.</p><h1 id="View-firmware"><a href="#View-firmware" class="headerlink" title="View firmware"></a>View firmware</h1><p>I used <code>binwalk upgrade.bin | head</code> to check firmware file but got nothing.</p><p>Then I converted it into HEX string <code>xxd &lt; upgrade.bin | more</code>, after viewing, I think it is an encrypted file.</p><p>Usually unencrypted firmware files have some features:</p><ol><li>The first 64 bytes of the file header is <code>2705 1956</code>, a U-Boot header</li><li>An operating system string after the U-Boot image header</li><li>Part of the blank blocks(0xFF) is at the end</li></ol><p>You can view the U-Boot image header code on <a href="https://github.com/u-boot/u-boot/blob/master/include/image.h#L319" target="_blank" rel="noopener">GitHub</a></p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">typedef struct image_header &#123;</span><br><span class="line">        uint32_t        ih_magic;       /* Image Header Magic Number    */</span><br><span class="line">        uint32_t        ih_hcrc;        /* Image Header CRC Checksum    */</span><br><span class="line">        uint32_t        ih_time;        /* Image Creation Timestamp     */</span><br><span class="line">        uint32_t        ih_size;        /* Image Data Size              */</span><br><span class="line">        uint32_t        ih_load;        /* Data  Load  Address          */</span><br><span class="line">        uint32_t        ih_ep;          /* Entry Point Address          */</span><br><span class="line">        uint32_t        ih_dcrc;        /* Image Data CRC Checksum      */</span><br><span class="line">        uint8_t         ih_os;          /* Operating System             */</span><br><span class="line">        uint8_t         ih_arch;        /* CPU architecture             */</span><br><span class="line">        uint8_t         ih_type;        /* Image Type                   */</span><br><span class="line">        uint8_t         ih_comp;        /* Compression Type             */</span><br><span class="line">        uint8_t         ih_name[IH_NMLEN];      /* Image Name           */</span><br><span class="line">&#125; image_header_t;</span><br></pre></td></tr></table></figure><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$ xxd &lt; upgrade_decrypto.bin | more</span><br><span class="line">00000000: 2705 1956|d2fc 9955|5b20 b51a|0012 c3a7|   &apos;..V...U[ ......</span><br><span class="line">00000010: 8006 0000|8006 0000|d695 0fbf|05|05|02|03| ................</span><br><span class="line">00000020: 4d49 5053 204f 7065 6e57 7274 204c 696e    MIPS OpenWrt Lin</span><br><span class="line">00000030: 7578 2d33 2e31 382e 3233 0000 0000 0000    ux-3.18.23......</span><br></pre></td></tr></table></figure><p>At the same time, I found an <a href="https://www.right.com.cn/forum/thread-147608-1-1.html" target="_blank" rel="noopener">article</a> about firmware encryption, so I think the decryption function maybe inside firmware.</p><p>Now I am in trouble.</p><h1 id="Hardware-debug"><a href="#Hardware-debug" class="headerlink" title="Hardware debug"></a>Hardware debug</h1><p>I decided to tear down it and start with the hardware.</p><p>Connect to UART port via USB TTL adapter.</p><table><thead><tr><th>Adapter</th><th>Router</th></tr></thead><tbody><tr><td>GND</td><td>GND</td></tr><tr><td>TXD</td><td>RXD</td></tr><tr><td>RXD</td><td>TXD</td></tr></tbody></table><p>According the <a href="https://docs.gl-inet.com/en/3/dev/serial/" target="_blank" rel="noopener">doc</a> set speed <code>115200</code>.</p><h2 id="Run-U-Boot-mode"><a href="#Run-U-Boot-mode" class="headerlink" title="Run U-Boot mode"></a>Run U-Boot mode</h2><ol><li>Press and hold the reset button</li><li>Power on the unit (keep holding down the reset button)</li><li>The 3G/4G led will flash</li><li>Press reset button for at least:<ul><li>5 sec. to run web failsafe mode</li><li>8 sec. to run U-Boot console</li><li>10 sec. to run U-Boot netconsole</li></ul></li><li>Release the reset button</li><li>The 3G/4G led will faintly flash twice</li><li>Then you are in U-Boot mode</li></ol><img src="/reverse-engineering-gl-inet-mifi-router/uboot.gif" title="U-Boot"><p>Now you can read the data in memory.</p><h2 id="Busybox"><a href="#Busybox" class="headerlink" title="Busybox"></a>Busybox</h2><p>Or we can try to use shell in normal mode.</p><img src="/reverse-engineering-gl-inet-mifi-router/busybox.png" title="BusyBox"><h1 id="Decrypt-firmware"><a href="#Decrypt-firmware" class="headerlink" title="Decrypt firmware"></a>Decrypt firmware</h1><p>After viewing at the Lua web files, I found the shell script for the call.</p><p>Now I can get decrypt firmware file and duplicate it in a new router of the same model!</p>]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;A few days ago, my friend from Beijing sent me a &lt;a href=&quot;https://www.gl-inet.com/products/gl-mifi/&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;&gt;GL-MiFi 4G router&lt;/a&gt;. It uses custom developed firmware(based on OpenWrt, of course) to implement some functions. So we want to view its code and how it implements some functions.&lt;/p&gt;
+    
+    </summary>
+    
+    
+      <category term="Hardware" scheme="https://timonpeng.com/tags/Hardware/"/>
+    
+      <category term="Reverse engineering" scheme="https://timonpeng.com/tags/Reverse-engineering/"/>
+    
+      <category term="Router" scheme="https://timonpeng.com/tags/Router/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>Mosec 2019 badge crack</title>
+    <link href="https://timonpeng.com/mosec-2019-badge-crack/"/>
+    <id>https://timonpeng.com/mosec-2019-badge-crack/</id>
+    <published>2019-05-30T07:00:00.000Z</published>
+    <updated>2019-07-28T07:28:24.664Z</updated>
+    
+    <content type="html"><![CDATA[<p>Turn on the power, convert the handset light to morse code, decode it is <code>M0S8C74</code>.</p><a id="more"></a><p>Connect serial port through usb and send code(end with <code>#</code>) to unlock.</p><img src="/mosec-2019-badge-crack/crack.jpg" title="Crack">]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;Turn on the power, convert the handset light to morse code, decode it is &lt;code&gt;M0S8C74&lt;/code&gt;.&lt;/p&gt;
+    
+    </summary>
+    
+    
+      <category term="Hardware" scheme="https://timonpeng.com/tags/Hardware/"/>
+    
+  </entry>
+  
+</feed>
