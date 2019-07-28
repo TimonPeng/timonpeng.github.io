@@ -60,4 +60,25 @@
     
   </entry>
   
+  <entry>
+    <title>Shanghai telecom home users replace SDN gateway</title>
+    <link href="https://timonpeng.com/shanghai-telecom-home-users-replace-sdn-gateway/"/>
+    <id>https://timonpeng.com/shanghai-telecom-home-users-replace-sdn-gateway/</id>
+    <published>2018-10-01T07:00:00.000Z</published>
+    <updated>2019-07-28T13:22:36.006Z</updated>
+    
+    <content type="html"><![CDATA[<p>Replaced HG2821T-U with ZTE F401.</p><p>ZTE F401 is the equipment of Shanghai Telecom enterprise users, we can also use it.</p><a id="more"></a><h1 id="Get-LOID-from-HG2821T-U"><a href="#Get-LOID-from-HG2821T-U" class="headerlink" title="Get LOID from HG2821T-U"></a>Get LOID from HG2821T-U</h1><p>Connect to HG2821T-U and request <code>http://192.168.1.1/appapi/getstat/000000</code>, you can get loid from response json data.</p><img src="/shanghai-telecom-home-users-replace-sdn-gateway/get-loid.png" title="Get LOID"><h1 id="Configure-ZTE-F401"><a href="#Configure-ZTE-F401" class="headerlink" title="Configure ZTE F401"></a>Configure ZTE F401</h1><p>Connect to ZTE F401 and configure network manually:</p><ul><li>IPv4 Address: 192.168.1.2</li><li>Subnet Mask: 255.255.255.0</li><li>Router: 192.168.1.1</li></ul><p>Login web anagement interface <code>http://192.168.1.1</code>, username and password both <code>admin</code>.</p><p>Then configure SN, LOID and password as HG2821T-U’s LOID.</p><img src="/shanghai-telecom-home-users-replace-sdn-gateway/set-onu.png" title="Set ONU"><img src="/shanghai-telecom-home-users-replace-sdn-gateway/set-ctc.png" title="Set CTC"><p>If some random codes in the input box, don’t delete and keep them at the end.</p>]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;Replaced HG2821T-U with ZTE F401.&lt;/p&gt;
+&lt;p&gt;ZTE F401 is the equipment of Shanghai Telecom enterprise users, we can also use it.&lt;/p&gt;
+    
+    </summary>
+    
+    
+      <category term="Hardware" scheme="https://timonpeng.com/tags/Hardware/"/>
+    
+  </entry>
+  
 </feed>
