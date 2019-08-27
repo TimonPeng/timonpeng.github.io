@@ -103,4 +103,26 @@
     
   </entry>
   
+  <entry>
+    <title>Display custom image for the rimowa electronic tag</title>
+    <link href="https://timonpeng.com/display-custom-image-for-the-rimowa-electronic-tag/"/>
+    <id>https://timonpeng.com/display-custom-image-for-the-rimowa-electronic-tag/</id>
+    <published>2018-03-28T07:00:40.000Z</published>
+    <updated>2019-07-31T15:51:43.678Z</updated>
+    
+    <content type="html"><![CDATA[<p>Rimowa’s electronic tag allows you to display your boarding pass (some airlines) or customized picture information on your luggage. It has some input restrictions, but we can show anything now!</p><a id="more"></a><h1 id="Reverse-engineering"><a href="#Reverse-engineering" class="headerlink" title="Reverse engineering"></a>Reverse engineering</h1><h2 id="Prepare"><a href="#Prepare" class="headerlink" title="Prepare"></a>Prepare</h2><ul><li>A picture(200*450), if it is colored, it will be automatically displayed in black and white</li><li>Android phone(installed APP)</li><li>Traffic proxy tool(Charles, mitmproxy, etc.)</li><li>Your luggage</li></ul><p>## </p>]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;Rimowa’s electronic tag allows you to display your boarding pass (some airlines) or customized picture information on your luggage. It has some input restrictions, but we can show anything now!&lt;/p&gt;
+    
+    </summary>
+    
+    
+      <category term="Hardware" scheme="https://timonpeng.com/tags/Hardware/"/>
+    
+      <category term="Reverse engineering" scheme="https://timonpeng.com/tags/Reverse-engineering/"/>
+    
+  </entry>
+  
 </feed>
