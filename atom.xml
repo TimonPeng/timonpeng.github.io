@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="https://timonpeng.com/"/>
-  <updated>2019-07-28T11:07:23.993Z</updated>
+  <updated>2019-09-08T03:26:55.699Z</updated>
   <id>https://timonpeng.com/</id>
   
   <author>
@@ -15,6 +15,31 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>DJI RoboMaster S1 analyses</title>
+    <link href="https://timonpeng.com/dji-robomaster-s1-analyses/"/>
+    <id>https://timonpeng.com/dji-robomaster-s1-analyses/</id>
+    <published>2019-09-08T07:00:00.000Z</published>
+    <updated>2019-09-08T03:26:55.699Z</updated>
+    
+    <content type="html"><![CDATA[<a id="more"></a><h1 id="Network"><a href="#Network" class="headerlink" title="Network"></a>Network</h1><h2 id="TCP-Ports"><a href="#TCP-Ports" class="headerlink" title="TCP Ports"></a>TCP Ports</h2><ul><li>21 Anonymous login FTP</li><li>8905 Unknown</li><li>8906 Unknown</li><li>8907 Unknown</li><li>8910 Unknown</li><li>8909 Unknown</li><li>8912 Unknown</li><li>8913 Unknown</li><li>8916 States logger</li></ul><h3 id="FTP"><a href="#FTP" class="headerlink" title="FTP"></a>FTP</h3><p>Some .DAT files in the directorys.</p><img src="/dji-robomaster-s1-analyses/ftp-dirs.png" title="FTP"><h3 id="TCP-8916"><a href="#TCP-8916" class="headerlink" title="TCP/8916"></a>TCP/8916</h3><img src="/dji-robomaster-s1-analyses/8916.png" title="States">]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;a id=&quot;more&quot;&gt;&lt;/a&gt;
+
+&lt;h1 id=&quot;Network&quot;&gt;&lt;a href=&quot;#Network&quot; class=&quot;headerlink&quot; title=&quot;Network&quot;&gt;&lt;/a&gt;Network&lt;/h1&gt;&lt;h2 id=&quot;TCP-Ports&quot;&gt;&lt;a href=&quot;#TCP-P
+      
+    
+    </summary>
+    
+    
+      <category term="Hardware" scheme="https://timonpeng.com/tags/Hardware/"/>
+    
+  </entry>
   
   <entry>
     <title>Reverse engineering GL iNet MiFi router</title>
@@ -107,8 +132,8 @@
     <title>Display custom image for the rimowa electronic tag</title>
     <link href="https://timonpeng.com/display-custom-image-for-the-rimowa-electronic-tag/"/>
     <id>https://timonpeng.com/display-custom-image-for-the-rimowa-electronic-tag/</id>
-    <published>2018-03-28T07:00:40.000Z</published>
-    <updated>2019-07-31T15:51:43.678Z</updated>
+    <published>2018-03-28T07:00:00.000Z</published>
+    <updated>2019-09-07T17:37:54.508Z</updated>
     
     <content type="html"><![CDATA[<p>Rimowa’s electronic tag allows you to display your boarding pass (some airlines) or customized picture information on your luggage. It has some input restrictions, but we can show anything now!</p><a id="more"></a><h1 id="Reverse-engineering"><a href="#Reverse-engineering" class="headerlink" title="Reverse engineering"></a>Reverse engineering</h1><h2 id="Prepare"><a href="#Prepare" class="headerlink" title="Prepare"></a>Prepare</h2><ul><li>A picture(200*450), if it is colored, it will be automatically displayed in black and white</li><li>Android phone(installed APP)</li><li>Traffic proxy tool(Charles, mitmproxy, etc.)</li><li>Your luggage</li></ul><p>## </p>]]></content>
     
