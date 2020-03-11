@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+    
+<!-- Google Analytics -->
+<script>
+window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+ga('create', 'UA-96599088-1', 'auto');
+ga('send', 'pageview');
+</script>
+<script async src="https://www.google-analytics.com/analytics.js"></script>
+<!-- End Google Analytics -->
+
+
+    
+
+    
+
+
+
+    <meta charset="utf-8">
+    
+    
+    
+    
+    <title>Tips of pyinstaller executable file decompilation | Timon&#39;s Blog</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    
+    <meta name="theme-color" content="#3F51B5">
+    
+    
+    <meta name="keywords" content="Reverse engineering,Python">
+    <meta name="description" content="The articles on the Internet are all relatively old. Tips should be noted:  Python2.x and Python3.x have different length magic number. fix main program file use struct file contents, not fixed magic">
+<meta name="keywords" content="Reverse engineering,Python">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Tips of pyinstaller executable file decompilation">
+<meta property="og:url" content="https://timonpeng.com/tips-of-pyinstaller-executable-file-decompilation/index.html">
+<meta property="og:site_name" content="Timon&#39;s Blog">
+<meta property="og:description" content="The articles on the Internet are all relatively old. Tips should be noted:  Python2.x and Python3.x have different length magic number. fix main program file use struct file contents, not fixed magic">
+<meta property="og:locale" content="en">
+<meta property="og:updated_time" content="2020-03-11T10:33:55.102Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Tips of pyinstaller executable file decompilation">
+<meta name="twitter:description" content="The articles on the Internet are all relatively old. Tips should be noted:  Python2.x and Python3.x have different length magic number. fix main program file use struct file contents, not fixed magic">
+    
+        <link rel="alternate" type="application/atom+xml" title="Timon&#39;s Blog" href="/atom.xml">
+    
+
+    <link rel="apple-touch-icon" sizes="57x57" href="/apple-icon-57x57.png">
+    <link rel="apple-touch-icon" sizes="60x60" href="/apple-icon-60x60.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="/apple-icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="76x76" href="/apple-icon-76x76.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="/apple-icon-114x114.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="/apple-icon-120x120.png">
+    <link rel="apple-touch-icon" sizes="144x144" href="/apple-icon-144x144.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="/apple-icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-icon-180x180.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/android-icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="msapplication-TileColor" content="#3F51B5">
+    <meta name="msapplication-TileImage" content="/ms-icon-144x144.png">
+    <meta name="theme-color" content="#3F51B5">
+
+    <link rel="stylesheet" href="/css/style.css?v=1.7.2">
+    <script>window.lazyScripts=[]</script>
+
+    <!-- custom head -->
+    
+
+</head>
+
+<body>
+    <div id="loading" class="active"></div>
+
+    <aside id="menu" class="hide" >
+  <div class="inner flex-row-vertical">
+    <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menu-off">
+        <i class="icon icon-lg icon-close"></i>
+    </a>
+    <div class="brand-wrap" style="background-image:url(/img/brand.jpg)">
+      <div class="brand">
+        <a href="/" class="avatar waves-effect waves-circle waves-light">
+          <img src="/img/avatar.jpg">
+        </a>
+        <hgroup class="introduce">
+          <h5 class="nickname">Timon Peng</h5>
+        </hgroup>
+      </div>
+    </div>
+    <div class="scroll-wrap flex-col">
+      <ul class="nav">
+        
+            <li class="waves-block waves-effect">
+              <a href="/"  >
+                <i class="icon icon-lg icon-home"></i>
+                Home
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/archives/"  >
+                <i class="icon icon-lg icon-archives"></i>
+                Archives
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/tags/"  >
+                <i class="icon icon-lg icon-tags"></i>
+                Tags
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://github.com/timonpeng" target="_blank" >
+                <i class="icon icon-lg icon-github"></i>
+                Github
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/links/"  >
+                <i class="icon icon-lg icon-link"></i>
+                Links
+              </a>
+            </li>
+        
+      </ul>
+    </div>
+  </div>
+</aside>
+
+    <main id="main">
+        <header class="top-header" id="header">
+    <div class="flex-row">
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light on" id="menu-toggle">
+          <i class="icon icon-lg icon-navicon"></i>
+        </a>
+        <div class="flex-col header-title ellipsis">Tips of pyinstaller executable file decompilation</div>
+        
+        <div class="search-wrap" id="search-wrap">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="back">
+                <i class="icon icon-lg icon-chevron-left"></i>
+            </a>
+            <input type="text" id="key" class="search-input" autocomplete="off" placeholder="Search">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="search">
+                <i class="icon icon-lg icon-search"></i>
+            </a>
+        </div>
+        
+        
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menuShare">
+            <i class="icon icon-lg icon-share-alt"></i>
+        </a>
+        
+    </div>
+</header>
+<header class="content-header post-header">
+
+    <div class="container fade-scale">
+        <h1 class="title">Tips of pyinstaller executable file decompilation</h1>
+        <h5 class="subtitle">
+            
+                <time datetime="2020-03-11T07:00:00.000Z" itemprop="datePublished" class="page-time">
+  2020-03-11
+</time>
+
+
+            
+        </h5>
+    </div>
+
+    
+
+
+</header>
+
+
+<div class="container body-wrap">
+    
+    <aside class="post-widget">
+        <nav class="post-toc-wrap post-toc-shrink" id="post-toc">
+            <h4>TOC</h4>
+            <ol class="post-toc"><li class="post-toc-item post-toc-level-1"><a class="post-toc-link" href="#Extract-pyc-file"><span class="post-toc-number">1.</span> <span class="post-toc-text">Extract pyc file</span></a></li><li class="post-toc-item post-toc-level-1"><a class="post-toc-link" href="#Fix-main-file-header"><span class="post-toc-number">2.</span> <span class="post-toc-text">Fix main file header</span></a></li><li class="post-toc-item post-toc-level-1"><a class="post-toc-link" href="#Uncompyle-pyc-file"><span class="post-toc-number">3.</span> <span class="post-toc-text">Uncompyle pyc file</span></a></li></ol>
+        </nav>
+    </aside>
+
+
+<article id="post-tips-of-pyinstaller-executable-file-decompilation"
+  class="post-article article-type-post fade" itemprop="blogPost">
+
+    <div class="post-card">
+        <h1 class="post-card-title">Tips of pyinstaller executable file decompilation</h1>
+        <div class="post-meta">
+            <time class="post-time" title="2020-03-11 15:00:00" datetime="2020-03-11T07:00:00.000Z"  itemprop="datePublished">2020-03-11</time>
+
+            
+
+
+            
+<span id="busuanzi_container_page_pv" title="文章总阅读量" style='display:none'>
+    <i class="icon icon-eye icon-pr"></i><span id="busuanzi_value_page_pv"></span>
+</span>
+
+
+        </div>
+        <div class="post-content" id="post-content" itemprop="postContent">
+            <p>The articles on the Internet are all relatively old.</p>
+<p>Tips should be noted:</p>
+<ol>
+<li>Python2.x and Python3.x have different length magic number.</li>
+<li>fix main program file use <code>struct file</code> contents, not fixed magic number.</li>
+</ol>
+<h1 id="Extract-pyc-file"><a href="#Extract-pyc-file" class="headerlink" title="Extract pyc file"></a>Extract pyc file</h1><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"># download</span><br><span class="line">git clone https://github.com/pyinstaller/pyinstaller.git</span><br><span class="line">cd pyinstaller/</span><br><span class="line"></span><br><span class="line"># unnecessary</span><br><span class="line">pyenv local 3.6.9</span><br><span class="line">virtualenv venv</span><br><span class="line">source ./venv/bin/activate</span><br><span class="line"></span><br><span class="line"># install</span><br><span class="line">python setup.py develop</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python PyInstaller/utils/cliutils/archive_viewer.py /path/your-executable-file</span><br></pre></td></tr></table></figure>
+
+<p>There are 4 commands available:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">U: go Up one level</span><br><span class="line">O &lt;name&gt;: open embedded archive name</span><br><span class="line">X &lt;name&gt;: extract name</span><br><span class="line">Q: quit</span><br></pre></td></tr></table></figure>
+
+<p>Extract <code>main program file</code> and <code>struct file</code>.</p>
+<h1 id="Fix-main-file-header"><a href="#Fix-main-file-header" class="headerlink" title="Fix main file header"></a>Fix main file header</h1><p>You can see the Python version through <code>struct file</code> also:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">$ xxd &lt; struct.py</span><br><span class="line"></span><br><span class="line">00000000: 160d 0d0a 7079 6930 0101 0000 e300 0000  ....pyi0........</span><br><span class="line">00000010: 0000 0000 0000 0000 0008 0000 0040 0000  .............@..</span><br><span class="line">00000020: 0073 4c00 0000 6400 0064 0100 6402 0064  .sL...d..d..d..d</span><br><span class="line">00000030: 0300 6404 0064 0500 6406 0064 0700 6708  ..d..d..d..d..g.</span><br><span class="line">00000040: 005a 0000 6408 0064 0900 6c01 0054 6408  .Z..d..d..l..Td.</span><br><span class="line">00000050: 0064 0a00 6c01 006d 0200 5a02 0001 6408  .d..l..m..Z...d.</span><br><span class="line">00000060: 0064 0b00 6c01 006d 0300 5a03 0001 640c  .d..l..m..Z...d.</span><br><span class="line">00000070: 0053 290d da08 6361 6c63 7369 7a65 da04  .S)...calcsize..</span><br><span class="line">00000080: 7061 636b da09 7061 636b 5f69 6e74 6fda  pack..pack_into.</span><br><span class="line">00000090: 0675 6e70 6163 6bda 0b75 6e70 6163 6b5f  .unpack..unpack_</span><br><span class="line">000000a0: 6672 6f6d da0b 6974 6572 5f75 6e70 6163  from..iter_unpac</span><br><span class="line">000000b0: 6bda 0653 7472 7563 74da 0565 7272 6f72  k..Struct..error</span><br><span class="line">000000c0: e900 0000 0029 01da 012a 2901 da0b 5f63  .....)...*)..._c</span><br><span class="line">000000d0: 6c65 6172 6361 6368 6529 01da 075f 5f64  learcache)...__d</span><br><span class="line">000000e0: 6f63 5f5f 4e29 04da 075f 5f61 6c6c 5f5f  oc__N)...__all__</span><br><span class="line">000000f0: da07 5f73 7472 7563 7472 0b00 0000 720c  .._structr....r.</span><br><span class="line">00000100: 0000 00a9 0072 0f00 0000 720f 0000 00fa  .....r....r.....</span><br><span class="line">00000110: 1c2f 7573 722f 6c69 622f 7079 7468 6f6e  ./usr/lib/python</span><br><span class="line">00000120: 332e 352f 7374 7275 6374 2e70 79da 083c  3.5/struct.py..&lt;</span><br><span class="line">00000130: 6d6f 6475 6c65 3e03 0000 0073 0c00 0000  module&gt;....s....</span><br><span class="line">00000140: 0f01 0303 0303 0903 0a01 1001            ............</span><br></pre></td></tr></table></figure>
+
+<p>View main program file head:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">$ xxd &lt; t.py | more</span><br><span class="line"></span><br><span class="line">00000000: e300 0000 0000 0000 0000 0000 0009 0000  ................</span><br><span class="line">00000010: 0040 0000 0073 6502 0000 6400 0064 0100  .@...se...d..d..</span><br><span class="line">00000020: 6c00 006d 0100 5a01 0001 6400 0064 0200  l..m..Z...d..d..</span><br><span class="line">00000030: 6c02 005a 0200 6400 0064 0200 6c03 005a  l..Z..d..d..l..Z</span><br></pre></td></tr></table></figure>
+
+<p>You can find that the first byte of the main program is <code>e3</code>, therefore, the contents before <code>e3</code> in the <code>struct file</code> are filled to the front of the main program file.</p>
+<p><strong>It is 12 bytes(160d 0d0a 7079 6930 0101 0000) in the example, not 8 bytes on many old articles. So don’t use fixed length!!! View your struct file header!!!</strong></p>
+<h1 id="Uncompyle-pyc-file"><a href="#Uncompyle-pyc-file" class="headerlink" title="Uncompyle pyc file"></a>Uncompyle pyc file</h1><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">pip install uncompyle6</span><br><span class="line">uncompyle6 main.pyc &gt; main.py</span><br></pre></td></tr></table></figure>
+
+<p>Well done!</p>
+
+        </div>
+
+        <blockquote class="post-copyright">
+    <div class="content">
+        <p>
+            <img src="/img/cc.png" alt="cc">
+            This post is licensed under a <a href="https://creativecommons.org/licenses/by/4.0/deed.zh">Creative Commons Attribution 4.0 International License</a>.
+        </p>
+        <p>Thanks for your reward! You gave me fiat money, I won't want it!</p>
+        <p>BTC: 3HiSr4M7XjEy2mX6qDok4ecbUmDBAC88Qx</p>
+    </div>
+    <footer>
+        <a href="https://timonpeng.com">
+            <img src="/img/avatar.jpg" alt="Timon Peng">
+            Timon Peng
+        </a>
+    </footer>
+</blockquote>
+
+
+        <div class="post-footer">
+            
+	<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Python/">Python</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Reverse-engineering/">Reverse engineering</a></li></ul>
+
+
+            
+<div class="page-share-wrap">
+    
+
+<div class="page-share" id="pageShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://timonpeng.com/tips-of-pyinstaller-executable-file-decompilation/&title=《Tips of pyinstaller executable file decompilation》 — Timon's Blog&pic=https://timonpeng.com/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://timonpeng.com/tips-of-pyinstaller-executable-file-decompilation/&title=《Tips of pyinstaller executable file decompilation》 — Timon's Blog&source=" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://timonpeng.com/tips-of-pyinstaller-executable-file-decompilation/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《Tips of pyinstaller executable file decompilation》 — Timon's Blog&url=https://timonpeng.com/tips-of-pyinstaller-executable-file-decompilation/&via=https://timonpeng.com" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://timonpeng.com/tips-of-pyinstaller-executable-file-decompilation/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+
+    <a href="javascript:;" id="shareFab" class="page-share-fab waves-effect waves-circle">
+        <i class="icon icon-share-alt icon-lg"></i>
+    </a>
+</div>
+
+
+
+        </div>
+    </div>
+
+    
+<nav class="post-nav flex-row flex-justify-between flex-row-reverse">
+  
+
+  
+    <div class="waves-block waves-effect next">
+      <a href="/dji-robomaster-s1-analyses/" id="post-next" class="post-nav-link">
+        <div class="tips">Next <i class="icon icon-angle-right icon-lg icon-pl"></i></div>
+        <h4 class="title">DJI RoboMaster S1 analyses</h4>
+      </a>
+    </div>
+  
+</nav>
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<section class="comments" id="comments">
+    <div id="gitalk-container"></div>
+    <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+    <script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+    <script>
+        var id = location.pathname
+        if (location.pathname.length > 50) {
+          id = location.pathname.replace(/\/\d+\/\d+\/\d+\//, '').replace('/', '').substring(0, 50)
+        }
+        const gitalk = new Gitalk({
+          clientID: '3b5a83da0372f130c4a6',
+          clientSecret: '3d438f1b3382bd78f124bfdf2990938b3e687a0d',
+          repo: 'timonpeng.github.io',
+          owner: 'TimonPeng',
+          admin: ['TimonPeng'],
+          id: id,      // Ensure uniqueness and length less than 50
+          title: document.title.split('|')[0],
+          distractionFreeMode: false  // Facebook-like distraction free mode
+        })
+
+        gitalk.render('gitalk-container')
+    </script>
+</section>
+
+
+
+
+</article>
+
+</div>
+
+        <footer class="footer">
+    <div class="top">
+        
+<p>
+    <span id="busuanzi_container_site_uv" style='display:none'>
+        UV: <span id="busuanzi_value_site_uv"></span>
+    </span>
+    <span id="busuanzi_container_site_pv" style='display:none'>
+        PV: <span id="busuanzi_value_site_pv"></span>
+    </span>
+</p>
+
+
+        <p>
+            
+                <span><a href="/atom.xml" target="_blank" class="rss" title="rss"><i class="icon icon-lg icon-rss"></i></a></span>
+            
+            <span>This blog is licensed under a <a rel="license" href="https://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International License</a>.</span>
+        </p>
+    </div>
+    <div class="bottom">
+        <p><span>Timon Peng &copy; 2020</span>
+            <span>
+                
+                Power by <a href="http://hexo.io/" target="_blank">Hexo</a> Theme <a href="https://github.com/yscoder/hexo-theme-indigo" target="_blank">indigo</a>
+            </span>
+        </p>
+    </div>
+</footer>
+
+    </main>
+    <div class="mask" id="mask"></div>
+<a href="javascript:;" id="gotop" class="waves-effect waves-circle waves-light">
+    <img src="/img/back-to-top.ico">
+</a>
+
+
+
+<div class="global-share" id="globalShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=https://timonpeng.com/tips-of-pyinstaller-executable-file-decompilation/&title=《Tips of pyinstaller executable file decompilation》 — Timon's Blog&pic=https://timonpeng.com/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=https://timonpeng.com/tips-of-pyinstaller-executable-file-decompilation/&title=《Tips of pyinstaller executable file decompilation》 — Timon's Blog&source=" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://timonpeng.com/tips-of-pyinstaller-executable-file-decompilation/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《Tips of pyinstaller executable file decompilation》 — Timon's Blog&url=https://timonpeng.com/tips-of-pyinstaller-executable-file-decompilation/&via=https://timonpeng.com" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=https://timonpeng.com/tips-of-pyinstaller-executable-file-decompilation/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+<div class="page-modal wx-share" id="wxShare">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAN4AAADeCAAAAAB3DOFrAAACqUlEQVR42u3awYrjMBAE0Pn/n569LixxqrqlkIXn0+DYTj8NWEq1fn7i4/ev49X5V58mVz5f/++nhw88PDy8Remving+nxfXDlA+WC+fgIeHh3eNlzwuL31/bzLNPNeMh4eH9z2853ufr0wmnmTawMPDw/sfeUkpbZSQPwEPDw/vG3jto595+V37kPdY1oKHh4cX8/Iu0vf8faW/h4eHh7fuqrfBQb6Z4FSr7E21eHh4eBd4s5hgFmTkA5R/e3QlHh4e3gXe7JWdBLX5Ne2rv26P4eHh4R3izdKLZNG8aXRtcoafthQ8PDy8Ba99+e4/3TTAonvx8PDwLvDabQH5wjdpZbUbBY717vDw8PA+uGngVGyxCTsOb73Cw8PDK3mbQCFvj52NevN/Ax4eHt4NXlviZtG8DzU2QQYeHh7eWV4bm7YRxj5umA0rHh4e3id5bUSbhxftNJOceTNYeHh4eBd47aI2ed23+fHsmUV0goeHh3eUt3no7PW9Gb66s4eHh4d3gZcvi9uv3ze62iAjQuLh4eGtee1iehPdJuB8KiqyFjw8PLyjvHZz1WxrVF56HdFuSHh4eHgl7+wyNx+gPMydTTB4eHh493invrjdirpZdg8X0Hh4eHjXeHlBs2Ai31aVL7vrLh8eHh7empf/vM8ngxvNsGENeHh4eB/kzSLU/RDkgchqTxkeHh7emrePBtp2/qmuXbHpCg8PD2/N+y2PNvZNSm8X9MUQ4+Hh4V3gzVr+m3h3FgTnfw8PPDw8vJI3K3q/4M6bXvlz8PDw8D7Jm0Wrbfs/Dy/aSevlGTw8PLwv4LWxxSzqbcOOur+Hh4eH90HePrzYhBH1pIKHh4d3jZfc3DarkqHJp5bVxICHh4d3lHfgB/+o9ZUU1C7cV/09PDw8vPe8PxlbVLmbJFZOAAAAAElFTkSuQmCC" alt="微信分享二维码">
+</div>
+
+
+
+
+    <script src="//cdn.bootcss.com/node-waves/0.7.4/waves.min.js"></script>
+<script>
+var BLOG = { ROOT: '/', SHARE: true, REWARD: false };
+
+
+</script>
+
+<script src="/js/main.min.js?v=1.7.2"></script>
+
+
+<div class="search-panel" id="search-panel">
+    <ul class="search-result" id="search-result"></ul>
+</div>
+<template id="search-tpl">
+<li class="item">
+    <a href="{path}" class="waves-block waves-effect">
+        <div class="title ellipsis" title="{title}">{title}</div>
+        <div class="flex-row flex-middle">
+            <div class="tags ellipsis">
+                {tags}
+            </div>
+            <time class="flex-col time">{date}</time>
+        </div>
+    </a>
+</li>
+</template>
+
+<script src="/js/search.min.js?v=1.7.2" async></script>
+
+
+
+
+
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+</body>
+</html>
